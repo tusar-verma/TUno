@@ -2,29 +2,37 @@ import tkinter as tk
 from tkinter import ttk
 
 def main():
-    mainForm = createMainForm()
+    mainForm = MainForm()
     
-    mainForm.mainloop()
+    mainForm.form.mainloop()
 
 
-def createMainForm():    
-    form = tk.Tk()
-    form.title("TUno")
-    form.geometry("500x600")
+class MainForm:
+    def __init__(self):            
+        self.form = tk.Tk()
+
+        self.form.title("TUno")
+        self.form.geometry("500x600")      
+               
+        self.__createTabs()
+        
+        self.lblInit = tk.Label(self.__tabHosting, text= "TUno is fun")
+        self.lblInit.pack()
+
 
     # Tabs para hostear game y para unirse a un game
+    def __createTabs(self):
+        self.__tab_parent = ttk.Notebook(self.form)
 
-    tab_parent = ttk.Notebook(form)
+        self.__tabHosting = ttk.Frame(self.__tab_parent)
+        self.__tabJoinGame = ttk.Frame(self.__tab_parent)
+        
 
-    tabHosting = ttk.Frame(tab_parent)
-    tabJoinGame = ttk.Frame(tab_parent)
+        self.__tab_parent.add(self.__tabHosting, text= "Host game")
+        self.__tab_parent.add(self.__tabJoinGame, text= "Join game")
 
-    tab_parent.add(tabHosting, text= "Host game")
-    tab_parent.add(tabJoinGame, text= "Join game")
+        self.__tab_parent.pack(expand=1, fill="both")
 
-    tab_parent.pack(expand=1, fill="both")
-
-    return form
 
 if __name__ == "__main__":
     main()
