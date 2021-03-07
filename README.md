@@ -10,4 +10,4 @@ los objetos basicos de las GUI
 Tambien se vera de utilizar algun vpn o algo del estilo para implementar cierta seguridad.
 ___
 
-El unico proposito de este proyecto es el da la educación
+El unico proposito de este proyecto es educativo
