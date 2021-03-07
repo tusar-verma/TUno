@@ -13,9 +13,9 @@ Window {
 
     Rectangle {
         id: componentcontainer
-        color: "#202a4d"
-        border.color: "#000000"
-        border.width: 10
+        color: "#2e4061"
+        border.color: "#18314f"
+        border.width: 0
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
@@ -27,8 +27,4 @@ Window {
     }
 }
 
-/*##^##
-Designer {
-    D{i:0;formeditorZoom:0.75}D{i:1}
-}
-##^##*/
+
