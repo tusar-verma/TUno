@@ -55,7 +55,6 @@ Window {
                     width: 150
                     height: 0
                     color: "#00000000"
-                    border.color: "#a30000"
                     anchors.right: parent.right
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
@@ -130,14 +129,81 @@ Window {
                 }
 
             }
+
+
+            Rectangle {
+                id: sidecontainer
+                x: 0
+                width: 50
+                color: "#000000"
+                anchors.top: topcontainer.bottom
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 0
+                anchors.topMargin: 0
+
+                Column {
+                    id: sideButtons
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    anchors.rightMargin: 0
+                    anchors.leftMargin: 0
+                    spacing: 10
+                    anchors.bottomMargin: 65
+                    anchors.topMargin: 40
+
+                    SideButton {
+                        id: sideButton
+                        width: sidecontainer.width
+                        active: true
+                    }
+
+                    SideButton {
+                        id: sideButton1
+                        width: sidecontainer.width
+                        text: "Join game"
+                        btnIconSource: "../Images/svg_images/save_icon.svg"
+                    }
+
+                    SideButton {
+                        id: sideButton2
+                        width: sidecontainer.width
+                        visible: true
+                        text: "Profile"
+                        btnIconSource: "../Images/svg_images/resize_icon.svg"
+                        spacing: 6
+                    }
+                }
+
+                SideButton {
+                    id: sideButton3
+                    x: 0
+                    y: 190
+                    width: sidecontainer.width
+                    visible: true
+                    text: "Settings"
+                    anchors.bottom: parent.bottom
+                    clip: true
+                    anchors.bottomMargin: 25
+                    btnIconSource: "../Images/svg_images/settings_icon.svg"
+                    spacing: 6
+                }
+            }
+            Rectangle {
+                id: contentcontainer
+                color: "#121615"
+                anchors.left: sidecontainer.right
+                anchors.right: parent.right
+                anchors.top: topcontainer.bottom
+                anchors.bottom: parent.bottom
+                anchors.leftMargin: 0
+                anchors.topMargin: 0
+            }
         }
     }
 }
 
 
 
-/*##^##
-Designer {
-    D{i:0;formeditorZoom:0.75}D{i:8}D{i:9}D{i:6}D{i:5}D{i:11}D{i:10}D{i:13}D{i:12}
-}
-##^##*/
+
