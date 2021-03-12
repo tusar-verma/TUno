@@ -18,8 +18,8 @@ Window {
     Rectangle {
         id: form
         color: "#00000000"
-        border.color: "#18314f"
-        border.width: 0
+        border.color: "#141414"
+        border.width: 2
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
@@ -31,8 +31,15 @@ Window {
 
         Rectangle {
             id: maincontainer
+            visible: true
             color: "#00000000"
+            border.color: "#a30000"
+            border.width: 2
             anchors.fill: parent
+            anchors.rightMargin: 2
+            anchors.leftMargin: 2
+            anchors.bottomMargin: 2
+            anchors.topMargin: 2
 
             Rectangle {
                 id: bg
@@ -148,6 +155,7 @@ Window {
                 x: 0
                 width: 50
                 color: "#000000"
+                border.color: "#121615"
                 anchors.top: topcontainer.bottom
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: 0
@@ -231,3 +239,9 @@ Window {
 
 
 
+
+/*##^##
+Designer {
+    D{i:0;formeditorZoom:0.9}
+}
+##^##*/
