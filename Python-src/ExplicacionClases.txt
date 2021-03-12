@@ -1,0 +1,27 @@
+DeckClasses
+    Contiene las clases, funciones y atributos relacionados con las cartas,
+    desde mezclar el maso, tomar una carta, volver a poner una carta en el mazo, etc
+
+TUnoServerSocket
+    Se encargara de todo lo relacionado con recibir las conexiones de los clientes
+    y comunicar la informacion de estos a la clase TUnoGame
+    Luego se encargara de enviar las jugadas recibidas por los jugadores a la clase
+    TUnoGame para que las procese y, luego de q este de una respuesta, lo reenvie
+    a todos los jugadores
+
+
+TUnoClientSocket
+    Se encarga de establecer la conexion al servidor ademas de mandar la informacion del 
+    jugador a dicho servidor
+    Luego se encargara de recibir los datos del servidor sobre la partida y de mandar los
+    datos de las jugadas del cliente
+
+TUnoGame
+    Es el encargado de armar la partida con la informacion recibida por el servidor,
+    ademas de procesar las jugadas recibidas y enviar las respectivas respuestas a la
+    clase TUnoServerSocket para que se lo comunique a todos los jugadores
+    
+
+TUnoMain
+    Se encargara de iniciar el programa
+

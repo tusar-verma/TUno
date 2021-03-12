@@ -55,9 +55,4 @@ class UnoDeck:
         return self.__deck.pop(0)
 
     def putCardInDeck(self, card):
-        pass
-
-a = UnoDeck()
-print(a)
-print(a.getCard())
-print(a)
+        self.__deck.insert(random.choice(range(0,len(self.__deck))),card)
