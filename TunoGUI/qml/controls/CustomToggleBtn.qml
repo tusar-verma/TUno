@@ -29,8 +29,8 @@ Button{
             source: btnIconSource
             anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: parent.horizontalCenter
-            height: 25
-            width: 25
+            height: 30
+            width: 30
             fillMode: Image.PreserveAspectFit
         }
         ColorOverlay{
@@ -46,6 +46,6 @@ Button{
 
 /*##^##
 Designer {
-    D{i:0;formeditorZoom:2}
+    D{i:0;formeditorZoom:3}
 }
 ##^##*/

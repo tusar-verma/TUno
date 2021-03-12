@@ -77,7 +77,7 @@ Button{
             font: btnSideMenu.font
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left
-            anchors.leftMargin: 75
+            anchors.leftMargin: 50
             color: "#f5f5f5"
             visible: true
         }

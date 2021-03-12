@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Window 2.15
 import QtQuick.Controls 2.15
+import QtGraphicalEffects 1.15
 import "controls"
 
 Window {
@@ -11,6 +12,8 @@ Window {
     visible: true
     color: "#00000000"
     title: qsTr("TUno")
+
+    flags: Qt.Window | Qt.FramelessWindowHint
 
     Rectangle {
         id: form
@@ -34,8 +37,10 @@ Window {
             Rectangle {
                 id: bg
                 color: "#121615"
+                border.color: "#a30000"
                 border.width: 2
                 anchors.fill: parent
+
             }
 
             Rectangle {
@@ -98,6 +103,12 @@ Window {
                     anchors.topMargin: 0
                     anchors.bottomMargin: 0
 
+                    DragHandler {
+                        onActiveChanged: if(active){
+                                             window.startSystemMove()
+                                         }
+                    }
+
                     Label {
                         id: label
                         color: "#f5f5f5"
@@ -125,6 +136,7 @@ Window {
                         id: customToggleBtn
                         anchors.fill: parent
                         colorPressed: "#5f7470"
+                        onClicked: animationMenu.running = true
                     }
                 }
 
@@ -140,6 +152,18 @@ Window {
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: 0
                 anchors.topMargin: 0
+
+                PropertyAnimation {
+                    id: animationMenu
+                    target: sidecontainer
+                    property: "width"
+                    to: if (sidecontainer.width == 50)
+                            return 200;
+                        else
+                            return 50
+                    duration: 350
+                    easing.type: Easing.OutQuint
+                }
 
                 Column {
                     id: sideButtons
