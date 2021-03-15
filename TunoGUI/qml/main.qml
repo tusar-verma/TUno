@@ -13,7 +13,29 @@ Window {
     color: "#00000000"
     title: qsTr("TUno")
 
+    // Remove default custom tittle MenuBar
     flags: Qt.Window | Qt.FramelessWindowHint
+
+    // properties
+    // 0 normal size, 1 maximized
+    property int windowStatus: 0
+
+    // internal functions
+    QtObject{
+        id: internal
+
+        function maximizedRestore(){
+            if (windowStatus == 0){
+                windowStatus = 1
+                window.showMaximized()
+                maximizebtn.btnIconSource = "../Images/svg_images/restore_icon.svg"
+            }else{
+                windowStatus = 0
+                window.showNormal()
+                maximizebtn.btnIconSource = "../Images/svg_images/maximize_icon.svg"
+            }
+        }
+    }
 
     Rectangle {
         id: form
@@ -81,17 +103,20 @@ Window {
                         TopButton {
                             id: minimizebtn
                             colorPressed: "#5f7470"
+                            onClicked: window.showMinimized()
                         }
 
                         TopButton {
                             id: maximizebtn
                             colorPressed: "#5f7470"
                             btnIconSource: "../Images/svg_images/maximize_icon.svg"
+                            onClicked: internal.maximizedRestore()
                         }
 
                         TopButton {
                             id: closebtn
                             btnIconSource: "../Images/svg_images/close_icon.svg"
+                            onClicked: window.close()
                         }
                     }
                 }
@@ -109,6 +134,7 @@ Window {
                     anchors.leftMargin: 0
                     anchors.topMargin: 0
                     anchors.bottomMargin: 0
+
 
                     DragHandler {
                         onActiveChanged: if(active){

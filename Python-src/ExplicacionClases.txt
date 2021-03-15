@@ -20,6 +20,7 @@ TUnoGame
     Es el encargado de armar la partida con la informacion recibida por el servidor,
     ademas de procesar las jugadas recibidas y enviar las respectivas respuestas a la
     clase TUnoServerSocket para que se lo comunique a todos los jugadores
+    Admeas se encargara de manejar los turnos de los jugadores
     
 
 TUnoMain

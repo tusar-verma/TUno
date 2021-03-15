@@ -56,3 +56,4 @@ class UnoDeck:
 
     def putCardInDeck(self, card):
         self.__deck.insert(random.choice(range(0,len(self.__deck))),card)
+ 
