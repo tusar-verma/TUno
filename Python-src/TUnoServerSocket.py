@@ -1,9 +1,6 @@
-import TableClasses
-
 class TUnoServer:
     # 60 segundos
     timeOut = 60
-    maxPlayers = TableClasses.TUnoGame.maxPlayers
     def __init__(self):
         pass
     # Establecer el tiempo de espera para los jugadores
