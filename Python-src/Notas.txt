@@ -26,3 +26,37 @@ TUnoGame
 TUnoMain
     Se encargara de iniciar el programa
 
+Los mensajes del cliente al servidor son en formato Json:
+    {
+        "command": "create"
+        "maxPlayers": n
+        "password": <password>
+    }
+
+    {
+        "command": "join"
+        "playerId": <playerId>
+        "gameId": <gameId>
+        "password": <password>        
+    }
+
+    {
+        "command": "play"
+        "playerId": <playerId>
+        "card": <card>              (a definir)
+    }
+
+    {
+        "command": "firstComm"
+        "playerId": <playerId>
+    }
+
+    {
+        "command": "startGame"
+        "playerId": <playerId>
+        
+    }
+
+    {
+        "command": "quit"
+    }

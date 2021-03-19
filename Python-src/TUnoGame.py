@@ -10,21 +10,34 @@ class TUnoGame:
     __reverse = False
     __addingCards = False
     __amountToDraw = 0
-    
+
+    password = ""    
     players = []
     handSize = 7
 
-    def __init__(self, maxPlayers):
+    def __init__(self, maxPlayers, password):
         if self.checkValidGame(maxPlayers):
            self.maxPlayers = maxPlayers
+           self.password = password
         else:
            raise Exception("The maximum number of players is invalid")
         
     def checkValidGame(self, maxPlayers):
         return maxPlayers <= 4 and maxPlayers > 1
     
+    def checkPassword(self, password):
+        return self.password == password
+    
     def addPlayerToGame(self, player):
-        self.players.append(player)
+        if len(self.players) < self.__maxPlayers:                
+            if player not in self.players:
+                self.players.append(player)
+                return "added player"
+            else:
+                return "player already in game"
+        else:
+            return "full room"
+
     
     def restartGame(self):
         self.__deck = DeckClasses.UnoDeck()
