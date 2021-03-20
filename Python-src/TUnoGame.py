@@ -19,6 +19,7 @@ class TUnoGame:
         if self.checkValidGame(maxPlayers):
            self.maxPlayers = maxPlayers
            self.password = password
+           self.__firstGameCard()
         else:
            raise Exception("The maximum number of players is invalid")
         
@@ -32,11 +33,11 @@ class TUnoGame:
         if len(self.players) < self.__maxPlayers:                
             if player not in self.players:
                 self.players.append(player)
-                return "added player"
+                return (True, "added player")
             else:
-                return "player already in game"
+                return (False, "player already in game")
         else:
-            return "full room"
+            return (False, "full room")
 
     
     def restartGame(self):
@@ -48,7 +49,7 @@ class TUnoGame:
     def getNextPlayerToPlay(self):
         return self.players[self.__turn]
         
-    def firstGameCard(self):
+    def __firstGameCard(self):
         card = self.__deck.getCard()
         while card.special:
             self.__deck.putCardInDeck(card)
@@ -56,7 +57,7 @@ class TUnoGame:
 
         self.__discardPile = card
     
-    def validateCardToPlay(self, card):
+    def __validateCardToPlay(self, card):
         if self.__addingCards:
             return card.name == "+4" or card.name == "+2"
 
@@ -71,7 +72,7 @@ class TUnoGame:
 
 
     def playCard(self, card):
-        if self.validateCardToPlay(card):
+        if self.__validateCardToPlay(card):
             self.__deck.putCardInDeck(self.__discardPile)
             self.__discardPile = card
             # El cambio de color de las cartas wild y +4 se da cuando el cliente
@@ -128,5 +129,31 @@ class TUnoGame:
         self.__pasoDeTurno(1)
         return self.__deck.getCard()
 
+    def getGameState(self):
+        return gameStatus(self.__discardPile, self.getNextPlayerToPlay(), self.__reverse, self.__addingCards, self.__amountToDraw)
         
     
+class gameStatus:
+    lastCardPlayed = None
+    nextPlayerToPlay = None
+    isReversed = None
+    isAddingCards = None
+    amountToDraw = 0
+
+    def __init__(self, last, nextP, isRev, isAdd, amDraw):
+        self.lastCardPlayed = last.__dict__
+        self.nextPlayerToPlay = nextP
+        self.isReversed = isRev
+        self.isAddingCards = isAdd
+        self.amountToDraw = amDraw
+
+    def __str__(self):
+        string = f"""
+                last card played:  {self.lastCardPlayed}
+                next player: {self.nextPlayerToPlay}
+                is round going backwards: {self.isReversed}
+                is adding cards: {self.isAddingCards}
+                amount to draw: {self.amountToDraw}
+                    """
+        return string
+        

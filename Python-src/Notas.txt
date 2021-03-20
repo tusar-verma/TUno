@@ -41,9 +41,13 @@ Los mensajes del cliente al servidor son en formato Json:
     }
 
     {
+        "command": "get"
+    }
+    
+    {
         "command": "play"
         "playerId": <playerId>
-        "card": <card>              (a definir)
+        "card": <card>
     }
 
     {
