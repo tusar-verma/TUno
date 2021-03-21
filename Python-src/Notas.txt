@@ -46,7 +46,6 @@ Los mensajes del cliente al servidor son en formato Json:
     
     {
         "command": "play"
-        "playerId": <playerId>
         "card": <card>
     }
 
@@ -56,11 +55,19 @@ Los mensajes del cliente al servidor son en formato Json:
     }
 
     {
-        "command": "startGame"
-        "playerId": <playerId>
-        
+        "command": "startGame"        
+    }
+
+    {
+        "command": "drawcard"
+    }
+
+    {
+        "command": "eatcards"
     }
 
     {
         "command": "quit"
     }
+
+Mensajes del servidor al cliente

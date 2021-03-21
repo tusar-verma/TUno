@@ -39,6 +39,17 @@ class TUnoGame:
         else:
             return (False, "full room")
 
+    # 0: removido, 1: No existe jugador en juego, 2: removido y borrar juego por falta de jugadores
+    def removePlayer(self, player):
+        if player in self.players:
+            self.players.remove(player)
+            if len(self.players <= 1):
+                return 2
+                # borrar el juego ya que no hay suficientes jugadores
+            else:
+                return 0
+        else:
+            return 1
     
     def restartGame(self):
         self.__deck = DeckClasses.UnoDeck()
@@ -114,7 +125,7 @@ class TUnoGame:
     # Si luego de que se haya tirado una combinacion de +4 o +2 y el siguiente jugador
     # no tenga para sumar, tomara las cartas sumadas. Esto consiste en que el cliente le avisa
     # al servidor y este llama al siguiente metodo que actualiza el amountToDraw y el addingCards
-    def drawCards(self):
+    def eatCards(self):
         cardsToDraw = []
         for i in range(self.__amountToDraw):
             cardsToDraw.append(self.__deck.getCard())
@@ -148,12 +159,11 @@ class gameStatus:
         self.amountToDraw = amDraw
 
     def __str__(self):
-        string = f"""
-                last card played:  {self.lastCardPlayed}
-                next player: {self.nextPlayerToPlay}
-                is round going backwards: {self.isReversed}
-                is adding cards: {self.isAddingCards}
-                amount to draw: {self.amountToDraw}
-                    """
+        string = (f"last card played:  {self.lastCardPlayed}\n" 
+                f"next player: {self.nextPlayerToPlay}\n"
+                f"is round going backwards: {self.isReversed}\n"
+                f"is adding cards: {self.isAddingCards}\n"
+                f"amount to draw: {self.amountToDraw}\n"
+        )
         return string
         

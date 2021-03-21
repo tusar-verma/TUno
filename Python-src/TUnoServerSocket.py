@@ -3,6 +3,7 @@ import socket
 import threading
 import sys
 import traceback
+from DeckClasses import Card
 from TUnoGame import TUnoGame, gameStatus
 
 
@@ -16,41 +17,72 @@ def create(gameId, maxPlayers, password):
         games[gameId] = TUnoGame(maxPlayers, password)
         games[gameId].addPlayerToGame(gameId)
         players[gameId] = gameId
-        return "game created"
+        return (True, "game created")
     except Exception:
         traceback.print_exc()
-        return "couldn't create game"
-
+        return (False, "couldn't create game")
+# lock
 def join(playerId, gameId, password):
     if gameId in games:
         if games[gameId].checkPassword(password):
             result, message = games[gameId].addPlayerToGame(playerId)
             if result: 
                 players[playerId] = gameId
-            return message
+                return (True, message)
+            return (False,  message)
         else:
-            return "invalid password"
+            return (False, "invalid password")
     else:
-        return "game does not exist"
+        return (False, "game does not exist")
     pass
 
-def play():
-    return "implementar"
+def startGame(playerId):
+    pass
 
-def get_game_status(playerId):
-    gameId = players.get(playerId)
-    if gameId == None:
-        return (False, "No game")
-    else:     
-        return (True, games[gameId].getGameState())
+def drawCard(playerId):
+    pass
+
+def eatCards(playerId):
+    pass
+
+def dealCards(gameId):
+    pass
+
+# lock
+def play(playerId, gameId, card):  
+    try:
+        games[gameId].playCard(card)
+        return "Card played"
+    except: 
+        return "Invalid play"
+
+def get_game_status(playerId, gameId):
+    return games[gameId].getGameState()
     
 
-def quitTUno(playerId):
+def quitTUno(playerId, gameId):
+    message = ""
     if playerId in players:
         del players[playerId]
+        message += "Removed player from server; "
     if playerId in games:
         del games[playerId]
-    return "quited"
+        message += "Removed game of player; " 
+    if gameId != None and gameExists(gameId):
+        result = games[gameId].removePlayer(playerId)
+        if result == 0:
+            message += "Succesfully removed from game"
+        elif result == 1:
+            message += "Gamer was not in game"
+        else:
+            message += "Succesfully removed from game and game deleted due to lack of players"
+    return message
+
+def gameExists(gameId):
+    return gameId in games
+
+def isPlayerTurn(playerId, gameId):
+    return games[gameId].getNextPlayerToPlay() == playerId
 
 def validate_playerId(playerId):
     return ((playerId != None or playerId != "") and playerId not in players)
@@ -58,34 +90,51 @@ def validate_playerId(playerId):
 
 def thread_TUno_func(conn):
     playerId = None
+    gameId = None
+    quiting = False
     while True:
         data = json.loads(conn.recv(2048).decode())
         if not data:
+            quitTUno(playerId, gameId)
+            print("Lost connection with: ", conn, " PlayerID: ", playerId)
             break
         else:
-            print("From: ", conn, ": ", data)
-            result = ""
+            print("From: ", conn, f" ({playerId}): ", data)
+            message = ""
             if playerId == None:       
                 if validate_playerId(data["playerId"]):
                     playerId = data["playerId"]
                     players[playerId] = None
-                    result = "added_gamer"
+                    message = "Added gamer"
                 else: 
-                    result = "bad_playerId"
+                    message = "Bad playerId"
             else:         
-                if data["commnad"] == "create": message = create(playerId, data["maxPlayers"], data["password"]) 
-                if data["commnad"] == "join": message = join(playerId, data["gameId"], data["password"])
-                if data["commnad"] == "play": message = play()     
-                if data["commnad"] == "quit": message = quitTUno(playerId)    
-                
-                if data["commnad"] == "get": 
-                    result, message = get_game_status(playerId)   
+                if data["commnad"] == "create": 
+                    result, message = create(playerId, data["maxPlayers"], data["password"]) 
                     if result:
-                        conn.sendall(json.dumps(result))
-                        break            
-            conn.sendall(str.encode(message))
-                
-        # conn.send(data)
+                        gameId = playerId
+                elif data["commnad"] == "join": 
+                    result, message = join(playerId, data["gameId"], data["password"])
+                    if result:
+                        gameId = data["gameId"]
+                elif gameId != None and gameExists(gameId):                        
+                    if isPlayerTurn(playerId, gameId):
+                        if data["commnad"] == "play": 
+                            message = play(playerId, gameId, data["card"])     
+                        elif data["commnad"] == "quit": 
+                            message = quitTUno(playerId,gameId) 
+                            quiting = True
+                        elif data["commnad"] == "get": 
+                            message = get_game_status(playerId, gameId)     
+                        else: 
+                            message = "Bad command"
+                    else:
+                        message = "Not your turn"
+                else:
+                    gameId = None
+                    message = "There is no game"
+            conn.sendall(json.dumps(message))
+            if quiting: break
     conn.close()
 
 def main():    
