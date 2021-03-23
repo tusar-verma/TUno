@@ -1,15 +1,27 @@
 import random
+import json
 
 class Card:
-    def __init__(self, name, color, special = False):
-        self.name = name
-        self.color = color
-        self.special = special
+    def __init__(self, name = None, color = None, special = False, dicCard = None):
+        if dicCard != None:
+           self.dicToCard(dicCard) 
+        else:
+            self.name = name
+            self.color = color
+            self.special = special
 
     def __str__(self):
         if self.color == None:
             return self.name
-        return "%s, %s" % (self.color, self.name)
+        return "(%s) %s" % (self.color, self.name)
+        
+    def __repr__(self):
+        return str(self)
+        
+    def dicToCard(self, dicCard):
+        self.name = dicCard["name"]
+        self.color = dicCard["color"]
+        self.special = dicCard["special"]
 
 class UnoDeck:
     __deck = []

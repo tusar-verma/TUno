@@ -54,8 +54,11 @@ class TUnoGame:
     def restartGame(self):
         self.__deck = DeckClasses.UnoDeck()
 
-    def getStartingCards(self):        
-        return [self.__deck.getCard() for i in range(self.handSize)]
+    def getStartingCards(self):     
+        handsOfCards = []
+        for p in self.players:
+            handsOfCards.append([self.__deck.getCard().__dict__ for i in range(self.handSize)])
+        return handsOfCards
     
     def getNextPlayerToPlay(self):
         return self.players[self.__turn]
@@ -80,7 +83,6 @@ class TUnoGame:
             return True
 
         return False
-
 
     def playCard(self, card):
         if self.__validateCardToPlay(card):
@@ -128,7 +130,7 @@ class TUnoGame:
     def eatCards(self):
         cardsToDraw = []
         for i in range(self.__amountToDraw):
-            cardsToDraw.append(self.__deck.getCard())
+            cardsToDraw.append(self.__deck.getCard().__dict__)
         
         self.__amountToDraw = 0
         self.__addingCards = False
