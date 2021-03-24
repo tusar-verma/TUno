@@ -1,12 +1,12 @@
 import DeckClasses
-
+import random
 
 class TUnoGame:
     
     __maxPlayers = 4
     __deck = DeckClasses.UnoDeck()
     __discardPile = None 
-    __turn = 0
+    __turn = -1
     __reverse = False
     __addingCards = False
     __amountToDraw = 0
@@ -54,11 +54,11 @@ class TUnoGame:
     def restartGame(self):
         self.__deck = DeckClasses.UnoDeck()
 
-    def getStartingCards(self):     
-        handsOfCards = []
-        for p in self.players:
-            handsOfCards.append([self.__deck.getCard().__dict__ for i in range(self.handSize)])
-        return handsOfCards
+    def getStartingCards(self):
+        return [self.__deck.getCard().__dict__ for i in range(self.handSize)]
+    
+    def setInitRandomTurn(self):
+        self.__turn = random.randint(0,len(self.players)-1)
     
     def getNextPlayerToPlay(self):
         return self.players[self.__turn]
@@ -129,6 +129,10 @@ class TUnoGame:
     # al servidor y este llama al siguiente metodo que actualiza el amountToDraw y el addingCards
     def eatCards(self):
         cardsToDraw = []
+        # Si no hay que tomar cartas se devuelve una lista vacia y no se pasa de turno
+        if self.__amountToDraw == 0:
+            return None
+
         for i in range(self.__amountToDraw):
             cardsToDraw.append(self.__deck.getCard().__dict__)
         
@@ -140,7 +144,7 @@ class TUnoGame:
 
     def getCard(self):
         self.__pasoDeTurno(1)
-        return self.__deck.getCard()
+        return self.__deck.getCard().__dict__
 
     def getGameState(self):
         return gameStatus(self.__discardPile, self.getNextPlayerToPlay(), self.__reverse, self.__addingCards, self.__amountToDraw)
