@@ -11,9 +11,11 @@ class TUnoGame:
     __addingCards = False
     __amountToDraw = 0
 
-    password = ""    
+    # [[playerId, handSize];...,[playerId, handSize]]
     players = []
     handSize = 7
+    password = ""
+    winner = None    
 
     def __init__(self, maxPlayers, password):
         if self.checkValidGame(maxPlayers):
@@ -32,24 +34,27 @@ class TUnoGame:
     def addPlayerToGame(self, player):
         if len(self.players) < self.__maxPlayers:                
             if player not in self.players:
-                self.players.append(player)
-                return (True, "added player")
+                self.players.append([player, 1])
+                return (True, None)
             else:
-                return (False, "player already in game")
+                return (False, "Player already in game")
         else:
-            return (False, "full room")
+            return (False, "Full room")
 
     # 0: removido, 1: No existe jugador en juego, 2: removido y borrar juego por falta de jugadores
-    def removePlayer(self, player):
-        if player in self.players:
-            self.players.remove(player)
-            if len(self.players <= 1):
-                return 2
-                # borrar el juego ya que no hay suficientes jugadores
-            else:
-                return 0
-        else:
-            return 1
+    def removePlayer(self, playerToRemove):
+        for player, handSize in self.players:
+            if player == playerToRemove:
+                self.players = [[player, handSize] for player, handSize in self.players if player != playerToRemove]
+                if len(self.players) <= 1:
+                    # borrar el juego ya que no hay suficientes jugadores
+                    return 2
+                else:
+                    # borrado el jugador y se puede continuar jugando
+                    return 0
+                break
+        # jugador no estaba en el juego
+        return 1
     
     def restartGame(self):
         self.__deck = DeckClasses.UnoDeck()
@@ -61,7 +66,7 @@ class TUnoGame:
         self.__turn = random.randint(0,len(self.players)-1)
     
     def getNextPlayerToPlay(self):
-        return self.players[self.__turn]
+        return self.players[self.__turn][0]
         
     def __firstGameCard(self):
         card = self.__deck.getCard()
@@ -85,9 +90,12 @@ class TUnoGame:
         return False
 
     def playCard(self, card):
+        if self.winner != None: return (False, f"Game finished, winner: {self.winner}")
         if self.__validateCardToPlay(card):
             self.__deck.putCardInDeck(self.__discardPile)
             self.__discardPile = card
+            self.players[self.__turn][1] -= 1
+            self.__checkForWinner()
             # El cambio de color de las cartas wild y +4 se da cuando el cliente
             # pone el color del atributo de la carta segun lo que eliga el usuario
             # al usar la carta
@@ -111,8 +119,14 @@ class TUnoGame:
             else:             
                 # Si no es una especial, es un numero   
                 self.__pasoDeTurno(1)
+                return (True, None)
         else:
-            raise Exception ("Invalid card")
+            return (False,"Invalid card")
+
+    def __checkForWinner(self):
+        for player, handSize in self.players:
+            if handSize == 0:
+                self.winner = player
     
     def __pasoDeTurno(self, cantidad):
         for i in range(cantidad):
@@ -136,6 +150,7 @@ class TUnoGame:
         for i in range(self.__amountToDraw):
             cardsToDraw.append(self.__deck.getCard().__dict__)
         
+        self.players[self.__turn][1] += self.__amountToDraw
         self.__amountToDraw = 0
         self.__addingCards = False
         self.__pasoDeTurno(1)
@@ -143,11 +158,12 @@ class TUnoGame:
         return cardsToDraw
 
     def getCard(self):
+        self.players[self.__turn][1] += 1
         self.__pasoDeTurno(1)
         return self.__deck.getCard().__dict__
 
     def getGameState(self):
-        return gameStatus(self.__discardPile, self.getNextPlayerToPlay(), self.__reverse, self.__addingCards, self.__amountToDraw)
+        return gameStatus(self.__discardPile, self.getNextPlayerToPlay(), self.__reverse, self.__addingCards, self.__amountToDraw, self.players, self.winner)
         
     
 class gameStatus:
@@ -155,14 +171,18 @@ class gameStatus:
     nextPlayerToPlay = None
     isReversed = None
     isAddingCards = None
+    players = []
     amountToDraw = 0
+    winner = None
 
-    def __init__(self, last, nextP, isRev, isAdd, amDraw):
+    def __init__(self, last, nextP, isRev, isAdd, amDraw, players, winner):
         self.lastCardPlayed = last.__dict__
         self.nextPlayerToPlay = nextP
         self.isReversed = isRev
         self.isAddingCards = isAdd
         self.amountToDraw = amDraw
+        self.players = players
+        self.winner = winner
 
     def __str__(self):
         string = (f"last card played:  {self.lastCardPlayed}\n" 
@@ -170,6 +190,8 @@ class gameStatus:
                 f"is round going backwards: {self.isReversed}\n"
                 f"is adding cards: {self.isAddingCards}\n"
                 f"amount to draw: {self.amountToDraw}\n"
+                f"players: {self.players}\n"
+                f"winner: {self.winner}\n"
         )
         return string
         

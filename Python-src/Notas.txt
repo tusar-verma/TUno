@@ -35,7 +35,6 @@ Los mensajes del cliente al servidor son en formato Json:
 
     {
         "command": "join"
-        "playerId": <playerId>
         "gameId": <gameId>
         "password": <password>        
     }
@@ -68,6 +67,10 @@ Los mensajes del cliente al servidor son en formato Json:
 
     {
         "command": "quit"
+    }
+
+    {
+        "command": "resetgame"
     }
 
 Mensajes del servidor al cliente
