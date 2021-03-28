@@ -1,5 +1,6 @@
 import DeckClasses
 import random
+import threading
 
 class TUnoGame:
     
@@ -10,17 +11,22 @@ class TUnoGame:
     __reverse = False
     __addingCards = False
     __amountToDraw = 0
+    # playerId que tiene una carta, se guardara un False si no dijo UNO
+    __lastUno = None
 
     # [[playerId, handSize];...,[playerId, handSize]]
     players = []
     handSize = 7
     password = ""
-    winner = None    
+    winner = None   
+    lock = threading.Lock() 
+    penaltie = 2
 
-    def __init__(self, maxPlayers, password):
+    def __init__(self, maxPlayers, password, penaltie = 2):
         if self.checkValidGame(maxPlayers):
            self.maxPlayers = maxPlayers
            self.password = password
+           self.penaltie = penaltie
            self.__firstGameCard()
         else:
            raise Exception("The maximum number of players is invalid")
@@ -32,14 +38,15 @@ class TUnoGame:
         return self.password == password
     
     def addPlayerToGame(self, player):
-        if len(self.players) < self.__maxPlayers:                
-            if player not in self.players:
-                self.players.append([player, 1])
-                return (True, None)
+        with self.lock:
+            if len(self.players) < self.__maxPlayers:                
+                if player not in self.players:
+                    self.players.append([player, self.handSize])
+                    return (True, None)
+                else:
+                    return (False, "Player already in game")
             else:
-                return (False, "Player already in game")
-        else:
-            return (False, "Full room")
+                return (False, "Full room")
 
     # 0: removido, 1: No existe jugador en juego, 2: removido y borrar juego por falta de jugadores
     def removePlayer(self, playerToRemove):
@@ -57,7 +64,20 @@ class TUnoGame:
         return 1
     
     def restartGame(self):
-        self.__deck = DeckClasses.UnoDeck()
+        if len(self.players) > 1:                
+            self.__deck = DeckClasses.UnoDeck()
+            self.__firstGameCard()
+            self.winner = None
+            self.__reverse = False
+            self.__addingCards = False
+            self.__amountToDraw = 0
+            self.setInitRandomTurn()
+            for player in self.players:
+                # Pone la cantidad de cartas de cada jugador
+                player[1] = self.handSize
+            return (True, None)
+        else:
+            return (False, "Not enough players")
 
     def getStartingCards(self):
         return [self.__deck.getCard().__dict__ for i in range(self.handSize)]
@@ -86,42 +106,74 @@ class TUnoGame:
             return True
         elif card.name == "+4" or card.name == "Wild":
             return True
-
         return False
-
-    def playCard(self, card):
-        if self.winner != None: return (False, f"Game finished, winner: {self.winner}")
-        if self.__validateCardToPlay(card):
-            self.__deck.putCardInDeck(self.__discardPile)
-            self.__discardPile = card
-            self.players[self.__turn][1] -= 1
-            self.__checkForWinner()
-            # El cambio de color de las cartas wild y +4 se da cuando el cliente
-            # pone el color del atributo de la carta segun lo que eliga el usuario
-            # al usar la carta
-
-            # Caso de jugada de una carta especial
-            if self.__discardPile.name == "Reverse":
-                self.__reverse = not self.__reverse
-                self.__pasoDeTurno(1)
-            elif self.__discardPile.name == "Skip":
-                self.__pasoDeTurno(2)
-            elif self.__discardPile.name == "Wild": 
-                self.__pasoDeTurno(1)
-            elif self.__discardPile.name == "+4":
-                self.__pasoDeTurno(1)
-                self.__addingCards = True
-                self.__amountToDraw += 4
-            elif self.__discardPile.name == "+2":
-                self.__pasoDeTurno(1)
-                self.__addingCards = True
-                self.__amountToDraw += +2
-            else:             
-                # Si no es una especial, es un numero   
-                self.__pasoDeTurno(1)
+    
+    # Si el jugador al tirar su anteultima carta no dice uno y otro jugador lo dice antes
+    # de que el siguiente jugador juege, debera tomar cartas (cantidad puesta por penaltie)
+    # Pero si llega a decir antes que otro jugador o el siguiente jugador tira una carta
+    # ya no podra ser penalizado
+    # La penalizacion se implementa de tal forma que se actualiza el hand size de dicho jugador
+    # sumandole cartas y haciendo un broadcast de la situacion del juego. El cliente penalizado
+    # al ver que tiene menos cartas que lo que dice el estado del juego solicita dichas cartas al
+    # server y este llama a getPenalitieCards()
+    def sayUNO(self, playerId):
+        with self.lock:
+            if self.__lastUno == None:
+                return (False, "Invalid")
+            if playerId == self.__lastUno:
+                self.__lastUno = None
+            else:
+                # jugador q no haya dicho uno tiene q comer 2 cartas
+                for p, h in self.players:
+                    if p == self.__lastUno:
+                        h += self.penaltie
+                self.__lastUno = None
+                # Broadcast 
                 return (True, None)
-        else:
-            return (False,"Invalid card")
+
+    def playCard(self, card, UNOsayed):
+        with self.lock:
+            if self.winner != None: 
+                return (False, f"Game finished, winner: {self.winner}")
+            if self.__validateCardToPlay(card):
+                # Si no se dijo uno y el siguiente jugador ya jugo una carta, ya no se puede
+                # penalizar al jugador que no dijo UNO
+                self.__lastUno = None
+                # Si tiene 2 cartas (al jugar la siguiente va a tener uno) y no dijo UNO
+                # se actualiza __lastUno 
+                if self.players[self.__turn][1] == 2 and UNOsayed == False:
+                    self.__lastUno = self.getNextPlayerToPlay()
+                    
+                self.__deck.putCardInDeck(self.__discardPile)
+                self.__discardPile = card
+                self.players[self.__turn][1] -= 1
+                self.__checkForWinner()
+                # El cambio de color de las cartas wild y +4 se da cuando el cliente
+                # pone el color del atributo de la carta segun lo que eliga el usuario
+                # al usar la carta
+
+                # Caso de jugada de una carta especial
+                if self.__discardPile.name == "Reverse":
+                    self.__reverse = not self.__reverse
+                    self.__pasoDeTurno(1)
+                elif self.__discardPile.name == "Skip":
+                    self.__pasoDeTurno(2)
+                elif self.__discardPile.name == "Wild": 
+                    self.__pasoDeTurno(1)
+                elif self.__discardPile.name == "+4":
+                    self.__pasoDeTurno(1)
+                    self.__addingCards = True
+                    self.__amountToDraw += 4
+                elif self.__discardPile.name == "+2":
+                    self.__pasoDeTurno(1)
+                    self.__addingCards = True
+                    self.__amountToDraw += +2
+                else:             
+                    # Si no es una especial, es un numero   
+                    self.__pasoDeTurno(1)
+                return (True, None)
+            else:
+                return (False,"Invalid card")
 
     def __checkForWinner(self):
         for player, handSize in self.players:
@@ -156,6 +208,9 @@ class TUnoGame:
         self.__pasoDeTurno(1)
 
         return cardsToDraw
+
+    def getPenalitieCards(self):        
+        return [self.__deck.getCard().__dict__ for i in range(self.penaltie)]        
 
     def getCard(self):
         self.players[self.__turn][1] += 1

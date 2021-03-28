@@ -46,8 +46,11 @@ Los mensajes del cliente al servidor son en formato Json:
     {
         "command": "play"
         "card": <card>
+        "UNO": <True / false>
     }
-
+    {
+        "command": "UNO"
+    }
     {
         "command": "firstComm"
         "playerId": <playerId>
@@ -70,7 +73,8 @@ Los mensajes del cliente al servidor son en formato Json:
     }
 
     {
-        "command": "resetgame"
+        "command": "retartgame"
     }
+
 
 Mensajes del servidor al cliente

@@ -7,7 +7,7 @@ from DeckClasses import Card
 from TUnoGame import TUnoGame, gameStatus
 
 # El gameId es el playerId del usuario que creo la sala
-# {gameId: (TUnoGame, [conn1,...,conn4])}
+# {gameId: (TUnoGame, [conn1,...,c|onn4])}
 games = {}
 # Los keys son el playerId y el value es el gameId del juego en el que se encuentra
 # {playerId: gameId}
@@ -23,7 +23,7 @@ def create(gameId, maxPlayers, password, playerConn):
     except Exception:
         traceback.print_exc()
         return (False, "couldn't create game")
-# lock
+
 def join(playerId, gameId, password, playerConn):
     if gameId in games:
         if games[gameId].checkPassword(password):
@@ -47,11 +47,11 @@ def startGame(playerId):
             threadStart = threading.Thread(target=thread_TUno_start_game_broadcast,args=(playerId))
             threadStart.start()
             threadStart.join()             
-            return (True, None)
+            return None
         else:
-            return (False, "Not enough players")
+            return "Not enough players"
     else:
-        return (False, "Player has no game")
+        return "Player has no game"
 
 def drawCard(gameId):
     return games[gameId][0].getCard()
@@ -62,10 +62,8 @@ def eatCards(gameId):
         return (False, "You dont have to eat cards")
     return (True, cards)
 
-# lock
-def play(playerId, gameId, card):  
-    return games[gameId][0].playCard(card)    
-#unlock
+def play(gameId, card, UNO):  
+    return games[gameId][0].playCard(card, UNO)    
 
 def get_game_status(playerId, gameId):
     return games[gameId].getGameState()
@@ -90,8 +88,13 @@ def quitTUno(playerId, gameId, playerConn):
             message += "Succesfully removed from game and game deleted due to lack of players"
     return message
 
-def resetGame(playerId):
-    
+def restartGame(playerId):
+    if gameExists(playerId):
+        game = games[playerId][0]        
+        return game.restartGame()
+    else:
+        return (False, "Player has no game")
+    pass
 
 def gameExists(gameId):
     return gameId in games
@@ -109,8 +112,8 @@ def thread_TUno_start_game_broadcast(gameId):
         for c in connections:
             startCards = games[gameId][0].getStartingCards()
             gameStatus = games[gameId][0].getGameState()
-            jCard = json.dumps([startCards, gameStatus], sort_keys = True)
-            c.sendall(jCard)
+            jMessage = json.dumps([startCards, gameStatus], sort_keys = True)
+            c.sendall(jMessage)
     else:
         raise Exception("Attempted to start a non-existent game")
         
@@ -160,16 +163,16 @@ def thread_TUno_func(playerConn):
                     if command == "start":
                         # el broadcast se hace en el thread de start
                         message = startGame(playerId)
-                    elif command == "resetgame":
-                        
+                    elif command == "restartgame":
+                        broadcastStatus, message = restartGame(playerId)                        
+                    elif command == "get": 
+                        message = get_game_status(playerId, gameId)  
                     elif isPlayerTurn(playerId, gameId):
                         if command == "play":        
-                            broadcastStatus, message = play(playerId, gameId, data["card"])   
+                            broadcastStatus, message = play(gameId, data["card"], data["UNO"])   
                         elif command == "quit":       
                             message = quitTUno(playerId,gameId, playerConn) 
-                            quiting = broadcastStatus = True
-                        elif command == "get": 
-                            message = get_game_status(playerId, gameId)     
+                            quiting = broadcastStatus = True   
                         elif command == "drawcard":
                             message = drawCard(gameId)
                             broadcastStatus = True
