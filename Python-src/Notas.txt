@@ -29,7 +29,8 @@ TUnoMain
 Los mensajes del cliente al servidor son en formato Json:
     {
         "command": "create"
-        "maxPlayers": n
+        "maxPlayers": <n>
+        "penaltie": <n>
         "password": <password>
     }
 
@@ -66,6 +67,10 @@ Los mensajes del cliente al servidor son en formato Json:
 
     {
         "command": "eatcards"
+    }
+
+    {
+        "command": "getPenaltieCards"
     }
 
     {

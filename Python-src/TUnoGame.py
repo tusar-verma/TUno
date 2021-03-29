@@ -14,7 +14,7 @@ class TUnoGame:
     # playerId que tiene una carta, se guardara un False si no dijo UNO
     __lastUno = None
 
-    # [[playerId, handSize];...,[playerId, handSize]]
+    # [[playerId, handSize], ..., [playerId, handSize]]
     players = []
     handSize = 7
     password = ""
@@ -37,11 +37,17 @@ class TUnoGame:
     def checkPassword(self, password):
         return self.password == password
     
-    def addPlayerToGame(self, player):
+    def __playerInGame(self, player):      
+        for p in self.players:
+            if p[0] == player:
+                return True
+        return False   
+    
+    def addPlayerToGame(self, playerToAdd):
         with self.lock:
-            if len(self.players) < self.__maxPlayers:                
-                if player not in self.players:
-                    self.players.append([player, self.handSize])
+            if len(self.players) < self.__maxPlayers:       
+                if not self.__playerInGame(playerToAdd):
+                    self.players.append([playerToAdd, self.handSize])
                     return (True, None)
                 else:
                     return (False, "Player already in game")
@@ -50,18 +56,18 @@ class TUnoGame:
 
     # 0: removido, 1: No existe jugador en juego, 2: removido y borrar juego por falta de jugadores
     def removePlayer(self, playerToRemove):
-        for player, handSize in self.players:
-            if player == playerToRemove:
-                self.players = [[player, handSize] for player, handSize in self.players if player != playerToRemove]
-                if len(self.players) <= 1:
-                    # borrar el juego ya que no hay suficientes jugadores
-                    return 2
-                else:
-                    # borrado el jugador y se puede continuar jugando
-                    return 0
-                break
-        # jugador no estaba en el juego
-        return 1
+        if self.__playerInGame(playerToRemove):
+            self.players = [[p, h] for p, h in self.players if p != playerToRemove]
+            if len(self.players) <= 1:
+                # borrar el juego ya que no hay suficientes jugadores
+                return 2
+            else:
+                # borrado el jugador y se puede continuar jugando
+                return 0
+        else:
+            # jugador no estaba en el juego
+            return 1
+
     
     def restartGame(self):
         if len(self.players) > 1:                
@@ -72,9 +78,7 @@ class TUnoGame:
             self.__addingCards = False
             self.__amountToDraw = 0
             self.setInitRandomTurn()
-            for player in self.players:
-                # Pone la cantidad de cartas de cada jugador
-                player[1] = self.handSize
+            self.players = [[p, self.handSize] for p, h in self.players]
             return (True, None)
         else:
             return (False, "Not enough players")
@@ -124,12 +128,13 @@ class TUnoGame:
                 self.__lastUno = None
             else:
                 # jugador q no haya dicho uno tiene q comer 2 cartas
+                playerToPenalize = self.__lastUno
                 for p, h in self.players:
                     if p == self.__lastUno:
                         h += self.penaltie
                 self.__lastUno = None
-                # Broadcast 
-                return (True, None)
+                
+                return (True, playerToPenalize)
 
     def playCard(self, card, UNOsayed):
         with self.lock:
@@ -181,7 +186,7 @@ class TUnoGame:
                 self.winner = player
     
     def __pasoDeTurno(self, cantidad):
-        for i in range(cantidad):
+        for _ in range(cantidad):
             if self.__reverse: 
                 self.__turn -= 1           
                 if self.__turn < 0:
@@ -199,7 +204,7 @@ class TUnoGame:
         if self.__amountToDraw == 0:
             return None
 
-        for i in range(self.__amountToDraw):
+        for _ in range(self.__amountToDraw):
             cardsToDraw.append(self.__deck.getCard().__dict__)
         
         self.players[self.__turn][1] += self.__amountToDraw
@@ -218,7 +223,7 @@ class TUnoGame:
         return self.__deck.getCard().__dict__
 
     def getGameState(self):
-        return gameStatus(self.__discardPile, self.getNextPlayerToPlay(), self.__reverse, self.__addingCards, self.__amountToDraw, self.players, self.winner)
+        return gameStatus(self.__discardPile, self.getNextPlayerToPlay(), self.__reverse, self.__addingCards, self.__amountToDraw, self.players, self.winner).__dict__
         
     
 class gameStatus:

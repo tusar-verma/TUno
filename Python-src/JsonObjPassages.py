@@ -18,10 +18,10 @@ def main():
     result, message = a.playCard(Card("4", "Green", True), False)
     print(result, message)
     s = a.getGameState()
-    print(json.dumps(s.__dict__, indent=4))
+    print(json.dumps(s, indent=4))
     a.restartGame()
     s = a.getGameState()
-    print(json.dumps(s.__dict__, indent=4))
+    print(json.dumps(s, indent=4))
 
 
 if __name__ == "__main__":
