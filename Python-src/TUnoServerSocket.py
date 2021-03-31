@@ -6,6 +6,8 @@ import traceback
 from DeckClasses import Card
 from TUnoGame import TUnoGame, gameStatus
 
+#python TUnoServerSocket.py 127.0.0.1 65432
+
 # El gameId es el playerId del usuario que creo la sala
 # {gameId: (TUnoGame, {player1: conn1, ..., playerN: connN})}
 games = {}
@@ -137,16 +139,19 @@ def thread_TUno_game_status_broadcast(gameId):
         raise Exception("Attempted to broadcast in a non-existent game")
 
 def thread_TUno_func(playerConn):
+    print("Started thread for: ", playerConn)
     playerId = None
     gameId = None
     quiting = False
     while True:
-        data = json.loads(playerConn.recv(2048).decode())
+        recived = playerConn.recv(2048).decode()
+        print("Recived: ", recived)
+        data = json.loads(recived)
         if not data:
             quitTUno(playerId, gameId, playerConn)
             print("Lost connection with: ", playerConn, " PlayerID: ", playerId)
             break
-        else:
+        else:            
             print("From: ", playerConn, f" ({playerId}): ", data)
             message = None
             broadcastStatus = False
@@ -198,8 +203,9 @@ def thread_TUno_func(playerConn):
                     gameId = None
                     message = "There is no game"
 
-            if message != None:                    
-                playerConn.sendall(json.dumps(message))
+            if message != None:     
+                print("Sending to ", playerId, ": ", message)               
+                playerConn.sendall(json.dumps(message).encode())
             elif broadcastStatus:
                 tBrodcast = threading.Thread(target=thread_TUno_game_status_broadcast,args=(gameId,))
                 tBrodcast.start()
