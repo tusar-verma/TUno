@@ -1,14 +1,18 @@
 import socket
 import threading
 import json
+import time
 from queue import Queue
+from TUnoClientFunctions import *
 
 from DeckClasses import Card
 
 def main():
     try:
         client = TUnoClient()
-        client.sendMessage(client.firstCommand("Tusar"))
+        client.sendMessage(firstCommand("ElNegro7u7"))
+        time.sleep(2)
+        client.quitGame()
     except:
         print("Couldn't connect to server")
 
@@ -26,7 +30,9 @@ class TUnoClient:
         try:
             self.connectToServer()   
             t = threading.Thread(target=self.thread_receiver)     
+            t1 = threading.Thread(target=self.thread_processMessage)
             t.start()
+            t1.start()
         except:
             raise Exception
 
@@ -41,41 +47,26 @@ class TUnoClient:
 
     def thread_receiver(self):
         while not self.stop:
-            data = self.SOCKET.recv(1024)
+            data = self.SOCKET.recv(2048).decode()
+            if not data:
+                self.stop = True
+                self.serverMessages.put("STOP")
+                break
             self.serverMessages.put(json.loads(data))
-            print(data)
-        print("Server stopped!")
+        print("Thread receiver stopped")
 
     def thread_processMessage(self):
-        print(self.serverMessages.get())
+        while not self.stop:        
+            data = self.serverMessages.get()
+            if data == "STOP":
+                break
+            print("Recived from server: ", data)        
+        print("Thread procesor stopped")
 
-    def firstCommand(self, playerId):
-        return json.dumps({
-            "command": "firstComm",
-            "playerId": playerId
-            })
+    def quitGame(self):
+        self.stop = True
+        self.sendMessage(messageQuit())
 
-    def createGame(self, maxPlayers, penaltie, password):
-        return json.dumps({
-            "command": "create",
-            "maxPlayers": maxPlayers,
-            "penaltie": penaltie,
-            "password": password
-        })
-
-    def joinGame(self, gameId, password):
-        return json.dumps({
-            "command": "join",
-            "gameId": gameId,
-            "password": password
-        }) 
-
-    def playCard(self, card, UNO):
-        return json.dumps({
-            "command": "play",
-            "card": Card("4","Green", False).__dict__,
-            "UNO": UNO
-        })
 
 if __name__ == "__main__":
     main()

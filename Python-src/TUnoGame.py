@@ -54,19 +54,15 @@ class TUnoGame:
             else:
                 return (False, "Full room")
 
-    # 0: removido, 1: No existe jugador en juego, 2: removido y borrar juego por falta de jugadores
+    # True: se puede seguir jugando, False no
+    # Si el jugador no estaba, entonces no se borra ningun jugador y se puede seguir jugando
+    # Si el jugador se borra y hay 2 o mas jugadores se puede seguir jugando
+    # Si quedan 1 o 0 jugadores no se puede seguir jugando
     def removePlayer(self, playerToRemove):
         if self.__playerInGame(playerToRemove):
             self.players = [[p, h] for p, h in self.players if p != playerToRemove]
-            if len(self.players) <= 1:
-                # borrar el juego ya que no hay suficientes jugadores
-                return 2
-            else:
-                # borrado el jugador y se puede continuar jugando
-                return 0
-        else:
-            # jugador no estaba en el juego
-            return 1
+            return len(self.players) <= 1
+        return True
 
     
     def restartGame(self):

@@ -81,24 +81,21 @@ def sayUno(playerId, gameId):
         return (False, message)
     
 def quitTUno(playerId, gameId, playerConn):
-    message = ""
     # borrar game si tiene
     if playerId in games:
         del games[playerId]
-        message += "Removed game of player; " 
     # borrar de la lista de jugadores
     if playerId in players:
         del players[playerId]
-        message += "Removed player from server; "
     if gameId != None and gameExists(gameId):
-        result = games[gameId].removePlayer(playerId)
-        if result == 0:
-            message += "Succesfully removed from game"
-        elif result == 1:
-            message += "Gamer was not in game"
+        # Si se borra el jugador y no se puede seguir, borrar el juego
+        if not games[gameId].removePlayer(playerId):
+            del games[gameId]    
         else:
-            message += "Succesfully removed from game and game deleted due to lack of players"
-    return message
+            # Si se puede seguir, mandar a los jugadores restantes el status del juego
+            # mostrando que se fue el jugador removido
+            tQuit = threading.Thread(target=thread_TUno_game_status_broadcast,args=(gameId,))
+            tQuit.start()
 
 def restartGame(playerId):
     if gameExists(playerId):
@@ -139,20 +136,20 @@ def thread_TUno_game_status_broadcast(gameId):
         raise Exception("Attempted to broadcast in a non-existent game")
 
 def thread_TUno_func(playerConn):
-    print("Started thread for: ", playerConn)
+    print("Started thread for: ", playerConn.getsockname(), ". Remote: ", playerConn.getpeername())
     playerId = None
     gameId = None
-    quiting = False
     while True:
-        recived = playerConn.recv(2048).decode()
-        print("Recived: ", recived)
-        data = json.loads(recived)
-        if not data:
-            quitTUno(playerId, gameId, playerConn)
-            print("Lost connection with: ", playerConn, " PlayerID: ", playerId)
+        recived = None
+        try:
+            recived = playerConn.recv(2048).decode()
+            print("From: ", playerConn.getsockname(), f" ({playerId}): ", recived)
+            data = json.loads(recived)
+        except:
             break
-        else:            
-            print("From: ", playerConn, f" ({playerId}): ", data)
+        if not data:
+            break
+        else:                        
             message = None
             broadcastStatus = False
             command = data["command"]            
@@ -166,10 +163,12 @@ def thread_TUno_func(playerConn):
                         message = "Bad playerId"
                 else:
                     message = "No playerId is stored for this client"
-            else:         
+            else:                         
                 if command == "create": 
                     result, message = create(playerId, data["maxPlayers"], data["password"], playerConn, data["penaltie"]) 
-                    if result: gameId = playerId
+                    if result: gameId = playerId                       
+                elif command == "quit":       
+                    break
                 elif command == "join": 
                     broadcastStatus, message = join(playerId, data["gameId"], data["password"], playerConn)
                     if broadcastStatus: gameId = data["gameId"]                        
@@ -185,10 +184,7 @@ def thread_TUno_func(playerConn):
                         broadcastStatus, message = sayUno(playerId, gameId)
                     elif isPlayerTurn(playerId, gameId):
                         if command == "play":        
-                            broadcastStatus, message = play(gameId, data["card"], data["UNO"])   
-                        elif command == "quit":       
-                            message = quitTUno(playerId,gameId, playerConn) 
-                            quiting = broadcastStatus = True   
+                            broadcastStatus, message = play(gameId, data["card"], data["UNO"])
                         elif command == "drawcard":
                             message = drawCard(gameId)
                             broadcastStatus = True
@@ -209,9 +205,9 @@ def thread_TUno_func(playerConn):
             elif broadcastStatus:
                 tBrodcast = threading.Thread(target=thread_TUno_game_status_broadcast,args=(gameId,))
                 tBrodcast.start()
-                tBrodcast.join()
-
-            if quiting: break
+    
+    quitTUno(playerId, gameId, playerConn)
+    print("Disconnected from: ", playerConn.getsockname(), " PlayerID: ", playerId)
     playerConn.close()
 
 def main():    

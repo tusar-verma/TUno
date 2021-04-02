@@ -70,10 +70,6 @@ Los mensajes del cliente al servidor son en formato Json:
     }
 
     {
-        "command": "getPenaltieCards"
-    }
-
-    {
         "command": "quit"
     }
 
