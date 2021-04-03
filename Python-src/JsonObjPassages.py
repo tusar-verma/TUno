@@ -4,9 +4,9 @@ from TUnoGame import TUnoGame
 from types import SimpleNamespace
 from DeckClasses import Card
 
-asd = 2
 
-def main():
+def main():    
+    print(Card("2","Green",False).__dict__)
     a = TUnoGame(3, "asdasd")
     a.addPlayerToGame("player1")
     a.addPlayerToGame("player2")

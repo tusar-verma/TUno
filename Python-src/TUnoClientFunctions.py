@@ -9,8 +9,8 @@ def firstCommand(playerId):
 def createGame(maxPlayers, penaltie, password):
     return json.dumps({
         "command": "create",
-        "maxPlayers": maxPlayers,
-        "penaltie": penaltie,
+        "maxPlayers": int(maxPlayers),
+        "penaltie": int(penaltie),
         "password": password
     })
 

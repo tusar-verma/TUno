@@ -28,7 +28,7 @@ def create(gameId, maxPlayers, password, playerConn, penaltie = 2):
 
 def join(playerId, gameId, password, playerConn):
     if gameId in games:
-        if games[gameId].checkPassword(password):
+        if games[gameId][0].checkPassword(password):
             result, message = games[gameId][0].addPlayerToGame(playerId)
             if result: 
                 players[playerId] = gameId
@@ -121,7 +121,7 @@ def thread_TUno_start_game_broadcast(gameId):
             startCards = games[gameId][0].getStartingCards()
             gameStatus = games[gameId][0].getGameState()
             jMessage = json.dumps([startCards, gameStatus], sort_keys = True)
-            c.sendall(jMessage)
+            c.sendall(jMessage.encode())
     else:
         raise Exception("Attempted to start a non-existent game")
         
@@ -129,9 +129,9 @@ def thread_TUno_start_game_broadcast(gameId):
 def thread_TUno_game_status_broadcast(gameId):
     if gameExists(gameId):            
         message = games[gameId][0].getGameState()
-        jsonMessage = json.dumps(message.__dict__, sort_keys = True, indent=4)
+        jsonMessage = json.dumps(message, sort_keys = True, indent=4)
         for c in games[gameId][1].values():
-            c.sendAll(jsonMessage)
+            c.sendall(jsonMessage.encode())
     else:
         raise Exception("Attempted to broadcast in a non-existent game")
 
