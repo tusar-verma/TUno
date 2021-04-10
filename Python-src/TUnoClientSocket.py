@@ -9,7 +9,7 @@ from DeckClasses import Card
 
 
 def switch(func, args):
-    #print("func: ", func, " args: ", args)
+    print("func: ", func, " args: ", args)
     switcher = {
         "1": firstCommand,
         "2": createGame,
@@ -28,7 +28,8 @@ def switch(func, args):
 
 
 class TUnoClient:
-    SOCKET = None
+    socket = None
+    connected = False
 
     # max size 0 = infinito     
     serverMessages = Queue(maxsize=0)
@@ -37,22 +38,23 @@ class TUnoClient:
     def __init__(self, Host = '127.0.0.1', port = 65432):
         self.HOST = Host
         self.PORT = port
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     def connectToServer(self):
-        try:
-            self.SOCKET = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.SOCKET.connect((self.HOST, self.PORT))
+        try: 
+            self.socket.connect((self.HOST, self.PORT))
+            self.connected = True
             threading.Thread(target=self.thread_receiver).start()
-            threading.Thread(target=self.thread_processMessage).start()
+            # threading.Thread(target=self.thread_processMessage).start()
             # threading.Thread(target=self.threadConsole).start()
             return True
         except:
-            self.SOCKET = None
+            self.connected = False
             return False
 
     def sendMessage(self, message):
         print("Sending... ", message)
-        self.SOCKET.sendall(message.encode())
+        self.socket.sendall(message.encode())
     
 #     def threadConsole(self):
 #         command =""
@@ -89,13 +91,14 @@ class TUnoClient:
     def thread_receiver(self):
         try:            
             while not self.stop:
-                data = self.SOCKET.recv(2048).decode()
+                data = self.socket.recv(2048).decode()
                 if not data:
                     break
                 self.serverMessages.put(json.loads(data))
         except:            
             print("Connection with server closed")
         finally:          
+            self.connected = False
             self.stop = True
             self.serverMessages.put("STOP")
         print("Thread receiver stopped")
@@ -111,9 +114,5 @@ class TUnoClient:
     def quitGame(self, tr, tp, tc):
         self.stop = True
         self.sendMessage(messageQuit())
+        self.connected = False
    
-a = TUnoClient()
-if a.connectToServer():        
-    a.sendMessage(switch("1", ("Tusar",)))
-    time.sleep(4)
-    a.sendMessage(switch("2", (2,2,"camilo200")))

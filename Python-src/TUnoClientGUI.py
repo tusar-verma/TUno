@@ -1,5 +1,6 @@
 import pygame
 import pygame_gui
+import time
 from TUnoClientSprites import *
 from TUnoClientSocket import *
 
@@ -12,11 +13,7 @@ def main():
     pygame.init()
     running = True
 
-    try:
-        server_conn = TUnoClient()
-    except:
-        print("Couldn't connect to server")
-
+    server_conn = TUnoClient()
 
     clock = pygame.time.Clock()
 
@@ -83,19 +80,27 @@ def main():
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == first_button:
-
+                        first_button.disable()
                         
-                        first_container.kill()
+                        if server_conn.connectToServer():
+                            server_conn.sendMessage(switch("1", ("Tusar",)))
+                            data = server_conn.serverMessages.get()
+                            print(data)
+                            first_container.kill()
+                        else:
+                            first_textbox.html_text = "Couldn't connect to server, try again later"
+                            first_textbox.rebuild()
+                            first_button.enable()
             
             manager.process_events(event)
         
-        manager.update(time_delta)
         main_window.fill((41, 49, 138))
         #main_form.fill((29, 34, 89))
         
         pygame.draw.line(main_window, (0,0,0), main_window.get_rect().midtop, main_window.get_rect().midbottom, 1)
         pygame.draw.line(main_window, (0,0,0), main_window.get_rect().midleft, main_window.get_rect().midright, 1)
 
+        manager.update(time_delta)
         manager.draw_ui(main_window)
         pygame.display.update()
 
