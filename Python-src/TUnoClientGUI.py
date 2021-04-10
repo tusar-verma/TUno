@@ -1,46 +1,106 @@
 import pygame
+import pygame_gui
+from TUnoClientSprites import *
+from TUnoClientSocket import *
 
-from pygame.locals import (
-    K_ESCAPE
-)
+SCREEN_WIDTH = 16*75
+SCREEN_HEIGHT = 9*75
 
-pygame.init()
 
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 600
-
-screen = pygame.display.set_mode([SCREEN_WIDTH,SCREEN_HEIGHT])
-
-running = True
-while running:
-
-    # Did the user click the window close button?
-    for event in pygame.event.get():
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                running = False
-        if event.type == pygame.QUIT:
-            running = False
-
-    # Fill the background with white
-    screen.fill((255, 255, 255))
-    # Un rectangulo donde llenar cosas
-    surf = pygame.Surface((200, 200))
-    surf_center = (
-        (SCREEN_WIDTH/2)-(surf.get_width() /2),
-        (SCREEN_HEIGHT/2)-(surf.get_height() /2)
-    )
-    # Give the surface a color to separate it from the background
-    surf.fill((0, 0, 0))
-    surf_face_color = (255,0,0)
-    # Circle in surf: surf, color, position of circle center (relative to surf), radius
-    pygame.draw.circle(surf, surf_face_color, (surf.get_width()/ 2, surf.get_height()), surf.get_width() / 2)
-    pygame.draw.circle(surf, surf_face_color, (surf.get_width() / 4, surf.get_height() / 4), surf.get_width() / 10)
-    pygame.draw.circle(surf, surf_face_color, ((surf.get_width() / 4) * 3, surf.get_height() / 4), surf.get_width() / 10)
-    # Flip the display
+def main():
     
-    screen.blit(surf, surf_center)
-    pygame.display.flip()
+    pygame.init()
+    running = True
 
-# Done! Time to quit.
-pygame.quit()
+    try:
+        server_conn = TUnoClient()
+    except:
+        print("Couldn't connect to server")
+
+
+    clock = pygame.time.Clock()
+
+    main_window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    
+    manager = pygame_gui.UIManager(main_window.get_rect().size)
+    pygame.display.set_caption("TUno")
+
+    first_container = pygame_gui.elements.UIPanel(
+        relative_rect = main_window.get_rect(),
+        manager = manager,
+        starting_layer_height = 0,
+        visible=True,
+        anchors={
+            "left":"left",
+            "right": "right",
+            "top": "top",
+            "bottom": "bottom"
+        }
+    )
+
+    first_button_size = (500,40)
+
+    first_button = pygame_gui.elements.UIButton(
+        relative_rect = pygame.Rect((main_window.get_rect().centerx - (first_button_size[0] / 2) ,main_window.get_rect().centery - (first_button_size[1] / 2)),first_button_size),
+        manager = manager,
+        container= first_container,
+        text = "Join",
+        anchors={
+            "left":"left",
+            "right": "right",
+            "top": "top",
+            "bottom": "bottom"
+        }
+    )
+
+    first_textentry = pygame_gui.elements.UITextEntryLine(
+        relative_rect= first_button.get_relative_rect().move(0,-100),
+        manager = manager,
+        container= first_container,
+        anchors={
+            "left":"left",
+            "right": "right",
+            "top": "top",
+            "bottom": "bottom"
+        }
+    )
+    
+
+    first_textbox = pygame_gui.elements.UITextBox(
+        html_text= "Please enter a user name",
+        relative_rect= first_button.get_relative_rect().move(0,-140),
+        manager= manager,
+        container= first_container
+    )
+
+    while running:
+
+        time_delta = clock.tick(60) / 1000.0
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == first_button:
+
+                        
+                        first_container.kill()
+            
+            manager.process_events(event)
+        
+        manager.update(time_delta)
+        main_window.fill((41, 49, 138))
+        #main_form.fill((29, 34, 89))
+        
+        pygame.draw.line(main_window, (0,0,0), main_window.get_rect().midtop, main_window.get_rect().midbottom, 1)
+        pygame.draw.line(main_window, (0,0,0), main_window.get_rect().midleft, main_window.get_rect().midright, 1)
+
+        manager.draw_ui(main_window)
+        pygame.display.update()
+
+    pygame.quit()
+
+
+if __name__ == "__main__":
+    main()
