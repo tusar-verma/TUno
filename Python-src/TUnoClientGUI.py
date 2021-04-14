@@ -34,41 +34,36 @@ def main():
             "bottom": "bottom"
         }
     )
-
-    first_button_size = (500,40)
+    first_button_rect = pygame.Rect(0,0,500,40)
+    first_button_rect.bottomleft = (338,-100)
 
     first_button = pygame_gui.elements.UIButton(
-        relative_rect = pygame.Rect((main_window.get_rect().centerx - (first_button_size[0] / 2) ,main_window.get_rect().centery - (first_button_size[1] / 2)),first_button_size),
+        #relative_rect = pygame.Rect((main_wind|ow.get_rect().centerx - (first_button_size[0] / 2) ,main_window.get_rect().centery - (first_button_size[1] / 2)),first_button_size),
+        relative_rect = first_button_rect,
         manager = manager,
         container= first_container,
         text = "Join",
         anchors={
             "left":"left",
-            "right": "right",
-            "top": "top",
+            "right": "left",
+            "top": "bottom",
             "bottom": "bottom"
         }
     )
 
     first_textentry = pygame_gui.elements.UITextEntryLine(
-        relative_rect= first_button.get_relative_rect().move(0,-100),
+        relative_rect= pygame.Rect(first_button_rect.move(0,-100)),        
         manager = manager,
         container= first_container,
         anchors={
             "left":"left",
-            "right": "right",
-            "top": "top",
+            "right": "left",
+            "top": "bottom",
             "bottom": "bottom"
         }
     )
+    first_textentry.set_text("Please enter a nickname") 
     
-
-    first_textbox = pygame_gui.elements.UITextBox(
-        html_text= "Please enter a user name",
-        relative_rect= first_button.get_relative_rect().move(0,-140),
-        manager= manager,
-        container= first_container
-    )
 
     while running:
 
@@ -76,22 +71,24 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+                server_conn.quit_game()
 
             if event.type == pygame.USEREVENT:
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == first_button:
-                        first_button.disable()
-                        
-                        if server_conn.connectToServer():
-                            server_conn.sendMessage(switch("1", ("Tusar",)))
+                        if not server_conn.connected:
+                            server_conn.connectToServer()
+
+                        if server_conn.connected:
+                            server_conn.send_message(firstCommand(first_textentry.get_text()))
                             data = server_conn.serverMessages.get()
-                            print(data)
-                            first_container.kill()
-                        else:
-                            first_textbox.html_text = "Couldn't connect to server, try again later"
-                            first_textbox.rebuild()
-                            first_button.enable()
-            
+                            if data == "Added gamer":
+                                first_container.kill()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    print(event.pos)
+
+
             manager.process_events(event)
         
         main_window.fill((41, 49, 138))

@@ -21,10 +21,10 @@ def create(gameId, maxPlayers, password, playerConn, penaltie = 2):
         games[gameId] = (TUnoGame(maxPlayers, password, penaltie), {gameId: playerConn})
         games[gameId][0].addPlayerToGame(gameId)
         players[gameId] = gameId
-        return (True, "game created")
+        return (True, "Game created")
     except Exception:
         traceback.print_exc()
-        return (False, "couldn't create game")
+        return (False, "Couldn't create game")
 
 def join(playerId, gameId, password, playerConn):
     if gameId in games:
@@ -33,12 +33,12 @@ def join(playerId, gameId, password, playerConn):
             if result: 
                 players[playerId] = gameId
                 games[gameId][1][playerId] = playerConn
-                return (True, message)
+                return (True, None)
             return (False,  message)
         else:
-            return (False, "invalid password")
+            return (False, "Invalid password")
     else:
-        return (False, "game does not exist")
+        return (False, "Game does not exist")
     pass
 
 def startGame(playerId):
@@ -56,19 +56,19 @@ def startGame(playerId):
         return "Player has no game"
 
 def drawCard(gameId):
-    return games[gameId][0].getCard()
+    return ["drawcard",games[gameId][0].getCard()]
 
 def eatCards(gameId):
     cards = games[gameId][0].eatCards()
     if cards == None:
         return (False, "You dont have to eat cards")
-    return (True, cards)
+    return (True, ["eatcards",cards])
 
 def play(gameId, card, UNO):  
     return games[gameId][0].playCard(card, UNO)    
 
 def get_game_status(gameId):
-    return games[gameId][0].getGameState()
+    return ["status", games[gameId][0].getGameState()]
 
 def sayUno(playerId, gameId):
     game = games[gameId][0]
@@ -112,7 +112,7 @@ def isPlayerTurn(playerId, gameId):
     return games[gameId].getNextPlayerToPlay() == playerId
 
 def validate_playerId(playerId):
-    return ((playerId != None or playerId != "") and playerId not in players)
+    return (playerId != None and playerId != "" and playerId not in players)
 
 # El thread manda a cada jugador del game "gameId" sus cartas iniciales y el gameStatus
 def thread_TUno_start_game_broadcast(gameId):
@@ -120,7 +120,7 @@ def thread_TUno_start_game_broadcast(gameId):
         for c in games[gameId][1].values():
             startCards = games[gameId][0].getStartingCards()
             gameStatus = games[gameId][0].getGameState()
-            jMessage = json.dumps([startCards, gameStatus], sort_keys = True)
+            jMessage = json.dumps(["start", startCards, gameStatus], sort_keys = True)
             c.sendall(jMessage.encode())
     else:
         raise Exception("Attempted to start a non-existent game")
@@ -129,7 +129,7 @@ def thread_TUno_start_game_broadcast(gameId):
 def thread_TUno_game_status_broadcast(gameId):
     if gameExists(gameId):            
         message = games[gameId][0].getGameState()
-        jsonMessage = json.dumps(message, sort_keys = True, indent=4)
+        jsonMessage = json.dumps(["status", message], sort_keys = True, indent=4)
         for c in games[gameId][1].values():
             c.sendall(jsonMessage.encode())
     else:
@@ -148,7 +148,7 @@ def thread_TUno_func(playerConn):
             data = json.loads(recived)
         except json.JSONDecodeError:   
             data = "badJson"
-        except ConnectionResetError:
+        except (ConnectionResetError, ConnectionAbortedError):
             break
 
         if not data:
@@ -158,7 +158,7 @@ def thread_TUno_func(playerConn):
                 command = data["command"] 
                 broadcastStatus = False 
                 if playerId == None:
-                    if command == "firstComm":       
+                    if command == "firstComm":      
                         if validate_playerId(data["playerId"]):
                             playerId = data["playerId"]
                             players[playerId] = None
@@ -182,7 +182,7 @@ def thread_TUno_func(playerConn):
                             message = startGame(playerId)
                         elif command == "restartgame":
                             broadcastStatus, message = restartGame(playerId)                        
-                        elif command == "get": 
+                        elif command == "getStatus": 
                             message = get_game_status(gameId)  
                         elif command == "UNO":
                             broadcastStatus, message = sayUno(playerId, gameId)
@@ -206,8 +206,12 @@ def thread_TUno_func(playerConn):
                 message, broadcastStatus = ("Bad command", False)
 
             if message != None:     
-                print("Sending to ", playerId, ": ", message)               
-                playerConn.sendall(json.dumps(message).encode())
+                print("Sending to ", playerId, ": ", message)   
+                try:
+                    playerConn.sendall(json.dumps(message).encode())
+                except (ConnectionResetError, ConnectionAbortedError):
+                    break
+                    
             elif broadcastStatus:
                 tBrodcast = threading.Thread(target=thread_TUno_game_status_broadcast,args=(gameId,))
                 tBrodcast.start()  

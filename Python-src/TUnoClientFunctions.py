@@ -19,10 +19,6 @@ def startGame():
         "command": "start"
     })
 
-def restartGame():
-    return json.dumps({
-        "command": "restartgame"
-    })
 
 def joinGame(gameId, password):
     return json.dumps({
@@ -61,4 +57,9 @@ def eatCards():
 def messageQuit():
     return json.dumps({
         "command": "quit"
+    })
+
+def restartGame():
+    return json.dumps({
+        "command": "restartgame"
     })

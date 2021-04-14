@@ -8,23 +8,23 @@ from TUnoClientFunctions import *
 from DeckClasses import Card
 
 
-def switch(func, args):
-    print("func: ", func, " args: ", args)
-    switcher = {
-        "1": firstCommand,
-        "2": createGame,
-        "3": startGame,
-        "4": restartGame,
-        "5": joinGame,
-        "6": playCard,
-        "7": getGameStatus,
-        "8": sayUNO,
-        "9": drawCard,
-        "10": eatCards,
-        "11": messageQuit
-    }
-    func = switcher.get(func, lambda a = (): "Invalid")
-    return func(*args)
+# def switch(func, args):
+#     print("func: ", func, " args: ", args)
+#     switcher = {
+#         "1": firstCommand,
+#         "2": createGame,
+#         "3": startGame,
+#         "4": restartGame,
+#         "5": joinGame,
+#         "6": playCard,
+#         "7": getGameStatus,
+#         "8": sayUNO,
+#         "9": drawCard,
+#         "10": eatCards,
+#         "11": messageQuit
+#     }
+#     func = switcher.get(func, lambda a = (): "Invalid")
+#     return func(*args)
 
 
 class TUnoClient:
@@ -33,7 +33,6 @@ class TUnoClient:
 
     # max size 0 = infinito     
     serverMessages = Queue(maxsize=0)
-    stop = False
 
     def __init__(self, Host = '127.0.0.1', port = 65432):
         self.HOST = Host
@@ -47,15 +46,40 @@ class TUnoClient:
             threading.Thread(target=self.thread_receiver).start()
             # threading.Thread(target=self.thread_processMessage).start()
             # threading.Thread(target=self.threadConsole).start()
-            return True
         except:
             self.connected = False
-            return False
 
-    def sendMessage(self, message):
+    def send_message(self, message):
         print("Sending... ", message)
         self.socket.sendall(message.encode())
-    
+
+
+    def thread_receiver(self):
+        try:            
+            while self.connected:
+                data = self.socket.recv(2048).decode()
+                if not data:
+                    break
+                self.serverMessages.put(json.loads(data))
+        except:            
+            print("Connection with server closed")
+        finally:          
+            self.connected = False
+            self.serverMessages.put("STOP")
+        print("Thread receiver stopped")
+
+    def quit_game(self):
+        self.send_message(messageQuit())
+        self.connected = False
+       
+    # def thread_processMessage(self):
+    #     while self.connected:        
+    #         data = self.serverMessages.get()
+    #         if data == "STOP":
+    #             break
+    #         print("Recived from server: ", data)        
+    #     print("Thread procesor stopped")
+
 #     def threadConsole(self):
 #         command =""
 #         while not self.stop and command != "11":        
@@ -86,33 +110,3 @@ class TUnoClient:
 #             except:
 #                 print("Something gone wrong, couldn't send command to server")
 #         print("Thread console stopped")
-
-
-    def thread_receiver(self):
-        try:            
-            while not self.stop:
-                data = self.socket.recv(2048).decode()
-                if not data:
-                    break
-                self.serverMessages.put(json.loads(data))
-        except:            
-            print("Connection with server closed")
-        finally:          
-            self.connected = False
-            self.stop = True
-            self.serverMessages.put("STOP")
-        print("Thread receiver stopped")
-
-    def thread_processMessage(self):
-        while not self.stop:        
-            data = self.serverMessages.get()
-            if data == "STOP":
-                break
-            print("Recived from server: ", data)        
-        print("Thread procesor stopped")
-
-    def quitGame(self, tr, tp, tc):
-        self.stop = True
-        self.sendMessage(messageQuit())
-        self.connected = False
-   

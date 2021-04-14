@@ -41,7 +41,7 @@ Los mensajes del cliente al servidor son en formato Json:
     }
 
     {
-        "command": "get"
+        "command": "getStatus"
     }
     
     {
@@ -79,3 +79,59 @@ Los mensajes del cliente al servidor son en formato Json:
 
 
 Mensajes del servidor al cliente
+
+El mensaje puede ser un string solo que corresponde a un mensaje de error o 
+puede ser una lista donde el primer elemento es una descripcion del mensaje 
+y de segundo un diccionario con datos de una partida (el status).
+Las respuestas de las peticiones que incluyen dichos diccionarios son:
+    drawcard
+    eatcards    (si le corresponde tomar las cartas)
+    getStatus
+    restartgame (si se pudo resetear el game)
+    join
+    UNO         (si corresponde penalizar a un jugador)
+    startgame   (si se pudo iniciar el juego)
+
+Cuando se pide que se inicie una partida (si se logra hacerlo) a cada jugador
+se le enviara una lista, el primer elemento describiendo que es el mensaje de inicio de la partida,
+el segundo las cartas iniciales del jugador correspondiente al que se le envia el mensaje y de tercer
+elemento el status del game
+
+El status de un juego tiene el siguiente formato:
+
+{
+    "lastCardPlayed": {
+        "name": "8",
+        "color": "Green",
+        "special": false
+    },
+    "nextPlayerToPlay": "player3",
+    "isReversed": false,
+    "isAddingCards": false,
+    "amountToDraw": 0,
+    ### el primer elemento de cada sublista es el playerId y el segundo la cantidad de cartas que tiene ###
+    "players": [
+        [
+            "player1",
+            7
+        ],
+        [
+            "player2",
+            7
+        ],
+        [
+            "player3",
+            7
+        ],
+        [
+            "player4",
+            7
+        ]
+    ],
+    "winner": null
+}
+
+El cliente en el principio del programa estara comunicandose con el servidor
+para establecer el playerId del cliente hasta que ingrese uno valido. Luego quedara
+a la espera de las respuestas o de mensajes del servidor y las procesará dependiendo de que
+tipo de mensaje sea y a que evento corresponda
