@@ -3,7 +3,7 @@ import socket
 import threading
 import sys
 import traceback
-from DeckClasses import Card
+from src.CommonResources.DeckClasses import Card
 from TUnoGame import TUnoGame, gameStatus
 
 #python TUnoServerSocket.py 127.0.0.1 65432

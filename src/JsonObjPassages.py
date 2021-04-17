@@ -1,8 +1,8 @@
 import threading
 import json
-from TUnoGame import TUnoGame
+from src.TUnoServer.TUnoGame import TUnoGame
 from types import SimpleNamespace
-from DeckClasses import Card
+from src.DeckPackage.DeckClasses import Card
 
 
 def main():    

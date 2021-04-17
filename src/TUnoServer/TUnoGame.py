@@ -1,4 +1,4 @@
-import DeckClasses
+from src.CommonResources import DeckClasses
 import random
 import threading
 

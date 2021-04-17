@@ -3,12 +3,14 @@ import threading
 import json
 import time
 
+
 from queue import Queue
-from TUnoClientFunctions import *
-from DeckClasses import Card
+from src.CommonResources.DeckClasses import Card
+from TUnoClientFunctions import messageQuit
 
 
-# def switch(func, args):
+
+# def switch(func, args):src.TUnoServer
 #     print("func: ", func, " args: ", args)
 #     switcher = {
 #         "1": firstCommand,
@@ -25,6 +27,8 @@ from DeckClasses import Card
 #     }
 #     func = switcher.get(func, lambda a = (): "Invalid")
 #     return func(*args)
+
+print(Card("4","Blue"))
 
 
 class TUnoClient:
