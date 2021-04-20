@@ -28,8 +28,6 @@ from TUnoClientFunctions import messageQuit
 #     func = switcher.get(func, lambda a = (): "Invalid")
 #     return func(*args)
 
-print(Card("4","Blue"))
-
 
 class TUnoClient:
     socket = None
@@ -55,7 +53,13 @@ class TUnoClient:
 
     def send_message(self, message):
         print("Sending... ", message)
-        self.socket.sendall(message.encode())
+        try:
+            self.socket.sendall(message.encode())
+        except (ConnectionResetError, ConnectionAbortedError):
+            print("Lost connection with server")
+            self.connected = False
+            self.serverMessages.put("STOP")
+
 
 
     def thread_receiver(self):
